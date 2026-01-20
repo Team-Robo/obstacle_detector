@@ -24,6 +24,11 @@
     <param name="distance_proportion"  value="0.00628"/>
     <param name="max_split_distance"   value="0.1"/>   
     <param name="max_circle_radius"    value="0.65"/>  <param name="radius_enlargement"   value="0.1"/>
+	
+    <param name="min_x_limit" value="-20.0"/>
+    <param name="max_x_limit" value="20.0"/>
+    <param name="min_y_limit" value="-20.0"/>
+    <param name="max_y_limit" value="20.0"/>
   </node>
 
   <node name="obstacle_tracker" pkg="obstacle_detector" type="obstacle_tracker_node" output="screen">
