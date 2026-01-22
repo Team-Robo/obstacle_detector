@@ -118,6 +118,10 @@ private:
   double p_min_y_limit_;
   double p_max_y_limit_;
 
+  int p_min_circle_points_;
+  double p_max_circle_fit_error_;
+  double p_min_circle_arc_angle_;
+
   std::string p_frame_id_;
 };
 

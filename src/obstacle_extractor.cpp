@@ -104,6 +104,11 @@ bool ObstacleExtractor::updateParams(std_srvs::Empty::Request &req, std_srvs::Em
 
   nh_local_.param<string>("frame_id", p_frame_id_, "map");
 
+  nh_local_.param<int>("min_circle_points", p_min_circle_points_, 8);
+  nh_local_.param<double>("max_circle_fit_error", p_max_circle_fit_error_, 0.03);
+  nh_local_.param<double>("min_circle_arc_angle", p_min_circle_arc_angle_, 0.35); // ~20 deg
+
+
   if (p_active_ != prev_active) {
     if (p_active_) {
       if (p_use_scan_)
@@ -179,7 +184,7 @@ void ObstacleExtractor::groupPoints() {
   point_set.num_points = 1;
   point_set.is_visible = true;
 
-  for (PointIterator point = input_points_.begin()++; point != input_points_.end(); ++point) {
+  for (PointIterator point = ++input_points_.begin(); point != input_points_.end(); ++point) {
     double range = (*point).length();
     double distance = (*point - *point_set.end).length();
 
@@ -323,30 +328,123 @@ bool ObstacleExtractor::checkSegmentsCollinearity(const Segment& segment, const 
           segment.distanceTo(s2.last_point)  < p_max_merge_spread_);
 }
 
+static inline double clamp(double x, double a, double b) {
+  return std::max(a, std::min(b, x));
+}
+
+bool fitCircleLeastSquares(const std::vector<Point>& pts, Circle& circle) {
+  if (pts.size() < 3)
+    return false;
+
+  double sum_x = 0, sum_y = 0;
+  double sum_x2 = 0, sum_y2 = 0;
+  double sum_xy = 0;
+  double sum_x3 = 0, sum_y3 = 0;
+  double sum_x1y2 = 0, sum_x2y1 = 0;
+
+  for (const Point& p : pts) {
+    double x = p.x;
+    double y = p.y;
+    double x2 = x * x;
+    double y2 = y * y;
+
+    sum_x += x;
+    sum_y += y;
+    sum_x2 += x2;
+    sum_y2 += y2;
+    sum_xy += x * y;
+    sum_x3 += x2 * x;
+    sum_y3 += y2 * y;
+    sum_x1y2 += x * y2;
+    sum_x2y1 += x2 * y;
+  }
+
+  double C = pts.size() * sum_x2 - sum_x * sum_x;
+  double D = pts.size() * sum_xy - sum_x * sum_y;
+  double E = pts.size() * sum_x3 + pts.size() * sum_x1y2
+           - (sum_x2 + sum_y2) * sum_x;
+  double G = pts.size() * sum_y2 - sum_y * sum_y;
+  double H = pts.size() * sum_x2y1 + pts.size() * sum_y3
+           - (sum_x2 + sum_y2) * sum_y;
+
+  double denom = (C * G - D * D);
+  if (fabs(denom) < 1e-12)
+    return false;
+
+  double a = (H * D - E * G) / denom;
+  double b = (E * D - H * C) / denom;
+  double c = -(a * sum_x + b * sum_y + sum_x2 + sum_y2) / pts.size();
+
+  Point center(-a / 2.0, -b / 2.0);
+  double radius = sqrt(center.x * center.x + center.y * center.y - c);
+
+  if (!std::isfinite(radius))
+    return false;
+
+  circle.center = center;
+  circle.radius = radius;
+  return true;
+}
+
 void ObstacleExtractor::detectCircles() {
-  for (auto segment = segments_.begin(); segment != segments_.end(); ++segment) {
+  for (auto seg = segments_.begin(); seg != segments_.end(); ++seg) {
+
+    // Visibility check stays
     if (p_circles_from_visibles_) {
-      bool segment_is_visible = true;
-      for (const PointSet& ps : segment->point_sets) {
+      bool visible = true;
+      for (const PointSet& ps : seg->point_sets) {
         if (!ps.is_visible) {
-          segment_is_visible = false;
+          visible = false;
           break;
         }
       }
-      if (!segment_is_visible)
-        continue;
+      if (!visible) continue;
     }
 
-    Circle circle(*segment);
+    // Collect points
+    std::vector<Point> pts;
+    for (const PointSet& ps : seg->point_sets) {
+      for (auto it = ps.begin; it != ps.end; ++it)
+        pts.push_back(*it);
+    }
+
+    if ((int)pts.size() < p_min_circle_points_)
+      continue;
+
+    Circle circle;
+    if (!fitCircleLeastSquares(pts, circle))
+      continue;
+
+    // Radius sanity
+    if (circle.radius <= 0.0 || circle.radius > p_max_circle_radius_)
+      continue;
+
+    // Fit error
+    double err = 0.0;
+    for (const Point& p : pts)
+      err += fabs((p - circle.center).length() - circle.radius);
+    err /= pts.size();
+
+    if (err > p_max_circle_fit_error_)
+      continue;
+
+    // Arc angle check (prevents line → circle nonsense)
+    Point v1 = pts.front() - circle.center;
+    Point v2 = pts.back()  - circle.center;
+    double arc = acos(
+      clamp((v1.dot(v2)) / (v1.length() * v2.length()), -1.0, 1.0)
+    );
+
+    if (arc < p_min_circle_arc_angle_)
+      continue;
+
     circle.radius += p_radius_enlargement_;
+    circle.point_sets = seg->point_sets;
+    circles_.push_back(circle);
 
-    if (circle.radius < p_max_circle_radius_) {
-      circles_.push_back(circle);
-
-      if (p_discard_converted_segments_) {
-        segment = segments_.erase(segment);
-        --segment;
-      }
+    if (p_discard_converted_segments_) {
+      seg = segments_.erase(seg);
+      --seg;
     }
   }
 }

@@ -128,3 +128,10 @@ install(DIRECTORY launch/
 #
 file(MAKE_DIRECTORY $ENV{HOME}/.local/share/icons/robor)
 file(COPY resources/play.png resources/stop.png DESTINATION $ENV{HOME}/.local/share/icons/robor)
+
+
+# Fake include path for CLion (for navigation only)
+include_directories(
+        /mnt/VM_Repos/jackal_ws/devel/include
+        /mnt/VM_Repos/test_ws/devel/include
+)
