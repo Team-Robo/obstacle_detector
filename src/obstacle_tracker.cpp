@@ -79,6 +79,7 @@ bool ObstacleTracker::updateParams(std_srvs::Empty::Request &req, std_srvs::Empt
   nh_local_.param<double>("process_variance", p_process_variance_, 0.01);
   nh_local_.param<double>("process_rate_variance", p_process_rate_variance_, 0.1);
   nh_local_.param<double>("measurement_variance", p_measurement_variance_, 1.0);
+  nh_local_.param<double>("dyna_obs_threshold_vel", dyna_obs_threshold_vel, 0.5);
 
   nh_local_.param<string>("frame_id", p_frame_id_, string("map"));
   obstacles_.header.frame_id = p_frame_id_;
@@ -470,13 +471,19 @@ void ObstacleTracker::publishObstacles() {
   for (auto& tracked_obstacle : tracked_obstacles_) {
     CircleObstacle ob = tracked_obstacle.getObstacle();
     ob.true_radius = ob.radius - radius_margin_;
-    obstacles_.circles.push_back(ob);
+
+    // Only include moving obstacles
+    double speed = sqrt(ob.velocity.x * ob.velocity.x + ob.velocity.y * ob.velocity.y);
+    if (speed > dyna_obs_threshold_vel) {
+      obstacles_.circles.push_back(ob);
+    }
   }
 
-  *obstacles_msg = obstacles_;
-  obstacles_msg->header.stamp = ros::Time::now();
-
-  obstacles_pub_.publish(obstacles_msg);
+  if (!obstacles_.circles.empty()) { // Only publish if there is at least one moving obstacle
+    *obstacles_msg = obstacles_;
+    obstacles_msg->header.stamp = ros::Time::now();
+    obstacles_pub_.publish(obstacles_msg);
+  }
 }
 
 // Ugly initialization of static members of tracked obstacles...

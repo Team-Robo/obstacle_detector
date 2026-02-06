@@ -107,6 +107,8 @@ private:
   double p_measurement_variance_;
 
   std::string p_frame_id_;
+
+  double dyna_obs_threshold_vel = 0.001; // [m/s]
 };
 
 } // namespace obstacle_detector
