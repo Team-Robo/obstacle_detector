@@ -102,6 +102,7 @@ private:
   bool p_circles_from_visibles_;
   bool p_discard_converted_segments_;
   bool p_transform_coordinates_;
+  bool p_publish_segments_;
 
   int p_min_group_points_;
 

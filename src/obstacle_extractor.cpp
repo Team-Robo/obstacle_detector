@@ -56,6 +56,7 @@ ObstacleExtractor::~ObstacleExtractor() {
   nh_local_.deleteParam("circles_from_visibles");
   nh_local_.deleteParam("discard_converted_segments");
   nh_local_.deleteParam("transform_coordinates");
+  nh_local_.deleteParam("publish_segments");
 
   nh_local_.deleteParam("min_group_points");
 
@@ -86,6 +87,7 @@ bool ObstacleExtractor::updateParams(std_srvs::Empty::Request &req, std_srvs::Em
   nh_local_.param<bool>("circles_from_visibles", p_circles_from_visibles_, true);
   nh_local_.param<bool>("discard_converted_segments", p_discard_converted_segments_, true);
   nh_local_.param<bool>("transform_coordinates", p_transform_coordinates_, true);
+  nh_local_.param<bool>("publish_segments", p_publish_segments_, true);
 
   nh_local_.param<int>("min_group_points", p_min_group_points_, 5);
 
@@ -432,15 +434,17 @@ void ObstacleExtractor::publishObstacles() {
     obstacles_msg->header.frame_id = base_frame_id_;
 
 
-  for (const Segment& s : segments_) {
-    SegmentObstacle segment;
+  if (p_publish_segments_) {
+    for (const Segment& s : segments_) {
+      SegmentObstacle segment;
 
-    segment.first_point.x = s.first_point.x;
-    segment.first_point.y = s.first_point.y;
-    segment.last_point.x = s.last_point.x;
-    segment.last_point.y = s.last_point.y;
+      segment.first_point.x = s.first_point.x;
+      segment.first_point.y = s.first_point.y;
+      segment.last_point.x = s.last_point.x;
+      segment.last_point.y = s.last_point.y;
 
-    obstacles_msg->segments.push_back(segment);
+      obstacles_msg->segments.push_back(segment);
+    }
   }
 
   for (const Circle& c : circles_) {
