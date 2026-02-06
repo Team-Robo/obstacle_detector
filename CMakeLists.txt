@@ -3,7 +3,21 @@ project(obstacle_detector)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive ${CMAKE_CXX_FLAGS} -Wfatal-errors\ ")
 
-find_package(catkin REQUIRED COMPONENTS roscpp roslaunch nodelet rviz std_msgs std_srvs geometry_msgs sensor_msgs tf laser_geometry message_generation)
+find_package(catkin REQUIRED COMPONENTS 
+  roscpp 
+  roslaunch 
+  nodelet 
+  rviz 
+  std_msgs 
+  std_srvs 
+  geometry_msgs 
+  sensor_msgs 
+  tf 
+  laser_geometry 
+  message_generation
+  costmap_converter
+)
+
 find_package(Armadillo REQUIRED)
 find_package(Boost 1.54.0 REQUIRED system)
 
@@ -51,6 +65,10 @@ target_link_libraries(obstacle_tracker_node obstacle_tracker)
 
 add_executable(obstacle_publisher_node src/nodes/obstacle_publisher_node.cpp)
 target_link_libraries(obstacle_publisher_node obstacle_publisher)
+
+add_executable(tracker_bridge_node src/tracker_bridge_node.cpp)
+target_link_libraries(tracker_bridge_node ${catkin_LIBRARIES})
+add_dependencies(tracker_bridge_node ${PROJECT_NAME}_generate_messages_cpp)
 
 #
 # Build nodelets
@@ -102,7 +120,7 @@ install(TARGETS scans_merger obstacle_extractor obstacle_tracker obstacle_publis
 #
 # Install nodes
 #
-install(TARGETS scans_merger_node obstacle_extractor_node obstacle_tracker_node obstacle_publisher_node
+install(TARGETS scans_merger_node obstacle_extractor_node obstacle_tracker_node obstacle_publisher_node tracker_bridge_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 #

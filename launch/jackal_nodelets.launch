@@ -1,0 +1,23 @@
+<launch>
+  <arg name="rviz" default="true"/>
+  <arg name="tracker_bridge" default="false"/>
+
+  <node name="nodelet_manager" pkg="nodelet" type="nodelet" args="manager" output="screen">
+    <param name="num_worker_threads" value="1"/>
+  </node>
+
+  <node name="obstacle_extractor" pkg="nodelet" type="nodelet" args="load obstacle_detector/ObstacleExtractor nodelet_manager">
+    <rosparam command="load" file="$(find obstacle_detector)/params/obstacle_extractor.yaml" />
+    <remap from="scan" to="/front/scan"/>
+  </node>
+
+  <node name="obstacle_tracker" pkg="nodelet" type="nodelet" args="load obstacle_detector/ObstacleTracker nodelet_manager">
+    <rosparam command="load" file="$(find obstacle_detector)/params/obstacle_tracker.yaml" />
+    <remap from="tracked_obstacles" to="/obstacles"/>
+  </node>
+
+  <node name="tracker_bridge" pkg="obstacle_detector" type="tracker_bridge_node" output="screen" if="$(arg tracker_bridge)"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find obstacle_detector)/resources/jackal_obs_tracker.rviz" if="$(arg rviz)"/>
+
+</launch>
