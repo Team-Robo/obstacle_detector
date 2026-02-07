@@ -1,5 +1,5 @@
 active: true
-copy_segments: true
+copy_segments: false
 frame_id: "odom"
 loop_rate: 100.0
 tracking_duration: 3.5 # 2.0
