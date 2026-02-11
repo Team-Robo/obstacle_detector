@@ -1,4 +1,6 @@
 <launch>
+  <arg name="tracker_bridge" default="false"/>
+  <arg name="rviz" default="false"/>
   <node name="scans_merger" pkg="obstacle_detector" type="scans_merger_node" output="screen">
     <param name="active"            value="true"/>
     <param name="publish_scan"      value="false"/> <param name="publish_pcl"       value="true"/>
