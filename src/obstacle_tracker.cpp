@@ -61,6 +61,7 @@ ObstacleTracker::~ObstacleTracker() {
   nh_local_.deleteParam("measurement_variance");
 
   nh_local_.deleteParam("frame_id");
+  nh_local_.deleteParam("dyna_obs_threshold_vel");
 }
 
 bool ObstacleTracker::updateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
