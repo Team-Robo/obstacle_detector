@@ -123,7 +123,8 @@ public:
   const KalmanFilter& getKFx() const { return kf_x_; }
   const KalmanFilter& getKFy() const { return kf_y_; }
   const KalmanFilter& getKFr() const { return kf_r_; }
-
+  geometry_msgs::Point initial_center_;
+  bool initial_center_set_ = false;
 private:
   void initKF() {
     kf_x_.A(0, 1) = s_sampling_time_;

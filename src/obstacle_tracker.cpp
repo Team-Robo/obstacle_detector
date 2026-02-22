@@ -62,6 +62,8 @@ ObstacleTracker::~ObstacleTracker() {
 
   nh_local_.deleteParam("frame_id");
   nh_local_.deleteParam("dyna_obs_threshold_vel");
+  nh_local_.deleteParam("min_obstacle_radius");
+  nh_local_.deleteParam("min_displacement");
 }
 
 bool ObstacleTracker::updateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
@@ -81,7 +83,8 @@ bool ObstacleTracker::updateParams(std_srvs::Empty::Request &req, std_srvs::Empt
   nh_local_.param<double>("process_rate_variance", p_process_rate_variance_, 0.1);
   nh_local_.param<double>("measurement_variance", p_measurement_variance_, 1.0);
   nh_local_.param<double>("dyna_obs_threshold_vel", dyna_obs_threshold_vel, 0.5);
-
+  nh_local_.param<double>("min_obstacle_radius", min_obstacle_radius_, 0.45);
+  nh_local_.param<double>("min_displacement", min_displacement_, 0.05);
   nh_local_.param<string>("frame_id", p_frame_id_, string("map"));
   obstacles_.header.frame_id = p_frame_id_;
 
@@ -473,9 +476,22 @@ void ObstacleTracker::publishObstacles() {
     CircleObstacle ob = tracked_obstacle.getObstacle();
     ob.true_radius = ob.radius - radius_margin_;
 
-    // Only include moving obstacles
+    // Set initial position on first observation
+    if (!tracked_obstacle.initial_center_set_) {
+      tracked_obstacle.initial_center_ = ob.center;
+      tracked_obstacle.initial_center_set_ = true;
+    }
+
     double speed = sqrt(ob.velocity.x * ob.velocity.x + ob.velocity.y * ob.velocity.y);
-    if (speed > dyna_obs_threshold_vel) {
+    double true_r = ob.radius - radius_margin_;
+
+    // Displacement from where this obstacle first appeared
+    double displacement = sqrt(
+      pow(ob.center.x - tracked_obstacle.initial_center_.x, 2.0) +
+      pow(ob.center.y - tracked_obstacle.initial_center_.y, 2.0)
+    );
+
+    if (speed > dyna_obs_threshold_vel && true_r >= min_obstacle_radius_ && displacement >= min_displacement_) {
       obstacles_.circles.push_back(ob);
     }
   }

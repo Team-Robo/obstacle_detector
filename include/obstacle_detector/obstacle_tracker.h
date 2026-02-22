@@ -109,6 +109,8 @@ private:
   std::string p_frame_id_;
 
   double dyna_obs_threshold_vel;
+  double min_obstacle_radius_;
+  double min_displacement_;
 };
 
 } // namespace obstacle_detector

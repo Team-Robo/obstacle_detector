@@ -24,6 +24,6 @@
 
   <node name="tracker_bridge" pkg="obstacle_detector" type="tracker_bridge_node" output="screen" if="$(arg tracker_bridge)"/>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find obstacle_detector)/resources/jackal_obs_tracker.rviz" if="$(arg rviz)"/>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find obstacle_detector)/resources/jackal_obs_tracker.rviz" if="$(arg rviz)"/> -->
 
 </launch>

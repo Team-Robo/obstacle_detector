@@ -2,8 +2,10 @@ active: true
 copy_segments: false
 frame_id: "odom"
 loop_rate: 100.0
-tracking_duration: 3.5 # 2.0
-process_variance: 0.021314021709656177 # 0.10548848566010886 # 0.5
+tracking_duration: 2.0
+process_variance: 0.05 # 0.10548848566010886 # 0.5
 process_rate_variance: 0.8341098412684642 # 0.362564368806229
-measurement_variance: 0.005026832674482895 # 0.04652295424687941 # 0.1
-std_correspondence_dev: 0.6
+measurement_variance: 0.015 # 0.04652295424687941 # 0.1
+std_correspondence_dev: 0.5
+dyna_obs_threshold_vel: 0.5
+min_displacement: 0.5 # if 
