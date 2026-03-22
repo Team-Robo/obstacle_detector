@@ -8,4 +8,4 @@ process_rate_variance: 0.8341098412684642 # 0.362564368806229
 measurement_variance: 0.015 # 0.04652295424687941 # 0.1
 std_correspondence_dev: 0.5
 dyna_obs_threshold_vel: 0.5
-min_displacement: 0.5 # if 
+min_displacement: 1.0 # if 
