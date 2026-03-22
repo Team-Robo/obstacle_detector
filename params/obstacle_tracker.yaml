@@ -3,9 +3,11 @@ copy_segments: false
 frame_id: "odom"
 loop_rate: 100.0
 tracking_duration: 2.0
+min_correspondence_cost: 0.3
+std_correspondence_dev: 0.5
 process_variance: 0.05 # 0.10548848566010886 # 0.5
 process_rate_variance: 0.8341098412684642 # 0.362564368806229
 measurement_variance: 0.015 # 0.04652295424687941 # 0.1
-std_correspondence_dev: 0.5
 dyna_obs_threshold_vel: 0.5
+min_obstacle_radius: 0.45
 min_displacement: 1.0 # if 
